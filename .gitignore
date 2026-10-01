@@ -1,0 +1,10 @@
+node_modules/
+.env
+shoppepay.db
+shoppepay.db-journal
+*.log
+.DS_Store
+server-*
+*.exe
+gateway*
+zakigithub.md
