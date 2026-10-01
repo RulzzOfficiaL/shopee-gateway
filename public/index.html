@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bayar dengan QRIS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F4EEDD;
+    --paper-raised: #FFFCF3;
+    --ink: #2A1F14;
+    --ink-soft: #8C7A5D;
+    --line: #DDCFA8;
+    --accent: #C1440E;
+    --accent-ink: #FFFDF8;
+    --accent-soft: #F4DCC9;
+    --lcd-bg: #16241B;
+    --lcd-fg: #8FE3A6;
+    --lcd-dim: #3D5A47;
+    --stamp: #A2332A;
+    --success: #2F6B4F;
+    --success-soft: #E1EDE4;
+    --danger: #A2332A;
+    --danger-soft: #F3DFDA;
+    --font-display: "Fraunces", ui-serif, Georgia, serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1B1712;
+      --paper-raised: #24201A;
+      --ink: #F1E8D8;
+      --ink-soft: #A79C86;
+      --line: #3E362A;
+      --accent: #E8703A;
+      --accent-ink: #1B1712;
+      --accent-soft: #3A2A1E;
+      --lcd-bg: #0E1A12;
+      --lcd-fg: #7FE0A0;
+      --lcd-dim: #2C4535;
+      --stamp: #E08469;
+      --success: #6FBF97;
+      --success-soft: #22301F;
+      --danger: #E08469;
+      --danger-soft: #3A2620;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1B1712; --paper-raised: #24201A; --ink: #F1E8D8; --ink-soft: #A79C86;
+    --line: #3E362A; --accent: #E8703A; --accent-ink: #1B1712; --accent-soft: #3A2A1E;
+    --lcd-bg: #0E1A12; --lcd-fg: #7FE0A0; --lcd-dim: #2C4535;
+    --stamp: #E08469; --success: #6FBF97; --success-soft: #22301F;
+    --danger: #E08469; --danger-soft: #3A2620;
+  }
+  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(140,122,93,0.16) 1px, transparent 1.3px) 0 0/14px 14px,
+      var(--paper);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    display: flex;
+    justify-content: center;
+    padding: 30px 16px 44px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .phone { width: 100%; max-width: 390px; }
+
+  .brandbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 0 2px;
+  }
+  .brandbar h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-style: italic;
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .brandbar .tag {
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 9px;
+  }
+
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 20px;
+    box-shadow: 0 1px 0 rgba(42,31,20,0.03);
+  }
+  .step-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 5px;
+  }
+  .step-sub {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0 0 18px;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  input#merchantName {
+    width: 100%;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  textarea#staticCode {
+    width: 100%;
+    min-height: 84px;
+    resize: vertical;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 10px 11px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .sticker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--paper);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+  .sticker svg { flex-shrink: 0; }
+  .sticker p { margin: 0; font-size: 11.5px; color: var(--ink-soft); line-height: 1.5; }
+
+  .btn {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    padding: 13px 16px;
+    border-radius: 9px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    width: 100%;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--ink-soft); border-color: var(--line); }
+  .btn-danger-ghost { background: transparent; color: var(--danger); border-color: var(--line); }
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-row .btn { width: auto; flex: 1; }
+  .link-row { text-align: center; margin-top: 14px; }
+  .link-row button {
+    background: none; border: none; color: var(--ink-soft);
+    font-family: var(--font-mono); font-size: 11.5px;
+    text-decoration: underline; cursor: pointer;
+  }
+
+  .lcd-bezel {
+    background: linear-gradient(180deg, #2B2118, #1E170F);
+    border-radius: 10px;
+    padding: 5px;
+    margin-bottom: 18px;
+  }
+  html[data-scheme="dark-mode-fallback"] .lcd-bezel { background: #000; }
+  .lcd-screen {
+    background: var(--lcd-bg);
+    border-radius: 6px;
+    padding: 14px 16px 12px;
+  }
+  .lcd-label {
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    color: var(--lcd-dim);
+    margin-bottom: 2px;
+  }
+  .lcd-amount {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 30px;
+    color: var(--lcd-fg);
+    text-shadow: 0 0 8px rgba(143,227,166,0.45);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .amount-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .amount-btn {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    padding: 13px 4px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .amount-btn:hover { border-color: var(--accent); }
+  .amount-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .amount-btn.selected { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  .custom-row {
+    display: flex; align-items: center; gap: 8px;
+    border-top: 1px dashed var(--line);
+    padding-top: 15px; margin-bottom: 16px;
+  }
+  .custom-row label { font-size: 11.5px; color: var(--ink-soft); white-space: nowrap; }
+  .custom-row .prefix { font-family: var(--font-mono); font-size: 13px; color: var(--ink-soft); }
+  .custom-row input {
+    flex: 1; min-width: 0;
+    font-family: var(--font-mono); font-size: 13px;
+    padding: 10px 8px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--paper); color: var(--ink);
+  }
+
+  .ticket {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    position: relative;
+    padding: 18px 18px 16px;
+    margin-bottom: 4px;
+  }
+  .ticket::before, .ticket::after {
+    content: "";
+    position: absolute;
+    left: 14px; right: 14px; height: 11px;
+    background-image: radial-gradient(circle at 6px 6px, var(--paper) 5px, transparent 5.4px);
+    background-size: 16px 11px;
+    background-repeat: repeat-x;
+  }
+  .ticket::before { top: -5px; }
+  .ticket::after { bottom: -5px; transform: rotate(180deg); }
+  .ticket-head { text-align: center; margin-bottom: 12px; }
+  .ticket-head .name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+  }
+  .ticket-head .sub { font-size: 10.5px; color: var(--ink-soft); margin-top: 2px; }
+  .ticket-divider {
+    border-top: 1px dashed var(--line);
+    margin: 12px 0;
+  }
+  .qr-box {
+    display: flex; justify-content: center; align-items: center;
+    background: #fff;
+    border-radius: 6px;
+    padding: 14px;
+    animation: printIn 0.45s ease both;
+    min-height: 308px;
+  }
+  @keyframes printIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .qr-box img { max-width: 100%; max-height: 280px; display: block; }
+  .receipt-row {
+    display: flex; justify-content: space-between;
+    font-size: 12.5px;
+    padding: 3px 0;
+  }
+  .receipt-row .k { color: var(--ink-soft); }
+  .receipt-row .v { font-weight: 600; }
+  .receipt-row .v.status { color: var(--accent); }
+  .receipt-row.total {
+    border-top: 1px dashed var(--line);
+    margin-top: 6px;
+    padding-top: 8px;
+    font-size: 14px;
+  }
+  .receipt-row.total .v { color: var(--accent); font-size: 15px; }
+  .receipt-row.unique .v { color: var(--stamp); }
+
+  .stamp-wrap { display: flex; justify-content: center; padding: 14px 0 10px; }
+  .stamp {
+    width: 118px; height: 118px;
+    border: 3.5px solid var(--stamp);
+    border-radius: 50%;
+    color: var(--stamp);
+    display: flex; align-items: center; justify-content: center;
+    transform: rotate(-9deg);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0.03em;
+    position: relative;
+  }
+  .stamp::before {
+    content: "";
+    position: absolute; inset: 7px;
+    border: 1.5px solid var(--stamp);
+    border-radius: 50%;
+    opacity: 0.55;
+  }
+
+  .note {
+    font-size: 11.5px;
+    line-height: 1.5;
+    padding: 9px 11px;
+    border-radius: 8px;
+    margin-top: 12px;
+  }
+  .note.invalid { background: var(--danger-soft); color: var(--danger); }
+  .note.info { background: var(--accent-soft); color: var(--accent); }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="brandbar">
+    <h1 id="brandName">Bayar dengan QRIS</h1>
+    <span class="tag">ShopeePay · QRIS</span>
+  </div>
+
+  <div class="card">
+
+    <!-- STEP 1: setup -->
+    <section id="stepSetup">
+      <p class="step-title">Pasang kode QRIS toko</p>
+      <p class="step-sub">Isi nama toko dan tempel kode QRIS statis dari akun ShopeePay/merchant kamu. Semuanya cuma disimpan di browser ini.</p>
+
+      <label class="field-label" for="merchantName">Nama toko</label>
+      <input id="merchantName" type="text" placeholder="cth. Warung Bu Nur" autocomplete="off">
+
+      <div class="sticker">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect x="1" y="1" width="38" height="38" rx="4" stroke="currentColor" stroke-opacity="0.35"/>
+          <rect x="7" y="7" width="8" height="8" fill="currentColor" fill-opacity="0.5"/>
+          <rect x="25" y="7" width="8" height="8" fill="currentColor" fill-opacity="0.5"/>
+          <rect x="7" y="25" width="8" height="8" fill="currentColor" fill-opacity="0.5"/>
+          <rect x="19" y="19" width="4" height="4" fill="currentColor" fill-opacity="0.5"/>
+          <rect x="25" y="25" width="4" height="4" fill="currentColor" fill-opacity="0.5"/>
+          <rect x="31" y="19" width="2" height="2" fill="currentColor" fill-opacity="0.5"/>
+        </svg>
+        <p>Kode QRIS ini yang tertempel di meja kasir kamu — biasanya berupa string panjang diawali <strong>00020101</strong>.</p>
+      </div>
+
+      <label class="field-label" for="staticCode">Kode QRIS statis</label>
+      <textarea id="staticCode" placeholder="00020101021126...5802ID5303360..."></textarea>
+      <div id="setupNote"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnSaveCode">Simpan &amp; lanjut</button>
+      </div>
+    </section>
+
+    <!-- STEP 2: amount -->
+    <section id="stepAmount" class="hidden">
+      <div class="lcd-bezel">
+        <div class="lcd-screen">
+          <div class="lcd-label">TOTAL BAYAR</div>
+          <div class="lcd-amount" id="lcdAmount">RP 0</div>
+        </div>
+      </div>
+
+      <p class="step-title">Pilih nominal</p>
+      <p class="step-sub">Nominal disematkan langsung ke kode QR — pembeli tinggal scan tanpa mengetik ulang.</p>
+      <div class="amount-grid" id="amountGrid"></div>
+      <div class="custom-row">
+        <label for="customInput">Bebas</label>
+        <span class="prefix">Rp</span>
+        <input id="customInput" type="text" inputmode="numeric" placeholder="cth. 75000" autocomplete="off">
+      </div>
+      <button class="btn btn-primary" id="btnGenerate" disabled>Cetak kode QRIS</button>
+      <div id="amountNote"></div>
+      <div class="link-row"><button id="btnChangeCode">Ganti kode QRIS / nama toko</button></div>
+    </section>
+
+    <!-- STEP 3: QR ticket -->
+    <section id="stepQr" class="hidden">
+      <div class="ticket">
+        <div class="ticket-head">
+          <div class="name" id="ticketMerchant">Toko</div>
+          <div class="sub">Pembayaran QRIS</div>
+        </div>
+        <div class="qr-box" id="qrBox"></div>
+        <div class="ticket-divider"></div>
+        <div class="receipt-row">
+          <span class="k">Nominal dasar</span>
+          <span class="v" id="qrBaseAmount">Rp0</span>
+        </div>
+        <div class="receipt-row unique">
+          <span class="k">Kode unik</span>
+          <span class="v" id="qrUniqueCode">+0</span>
+        </div>
+        <div class="receipt-row total">
+          <span class="k">Total bayar</span>
+          <span class="v" id="qrAmount">Rp0</span>
+        </div>
+        <div class="ticket-divider"></div>
+        <div class="receipt-row"><span class="k">Berlaku hingga</span><span class="v" id="qrTimer">04:00</span></div>
+        <div class="receipt-row"><span class="k">Status</span><span class="v status">MENUNGGU PEMBAYARAN</span></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-danger-ghost" id="btnCancelQr">Batal</button>
+        <button class="btn btn-primary" id="btnPaidQr">Cek Pembayaran</button>
+      </div>
+      <div id="qrNote"></div>
+    </section>
+
+    <!-- STEP 4: done -->
+    <section id="stepDone" class="hidden">
+      <div class="stamp-wrap"><div class="stamp">LUNAS</div></div>
+      <p class="step-title" style="text-align:center;">Ditandai selesai</p>
+      <p class="step-sub" style="text-align:center;" id="doneAmount"></p>
+      <button class="btn btn-primary" id="btnNewPayment">Buat pembayaran baru</button>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  // ================== KONFIG ==================
+  var API_BASE = "http://localhost:4000";
+  var API_KEY = "shopee-secret-key-2026";
+
+  var STORAGE_CODE_KEY = "qris_static_code_v1";
+  var STORAGE_NAME_KEY = "qris_merchant_name_v1";
+  var QUICK_AMOUNTS = [1000, 2000, 5000, 10000, 20000, 50000, 100000];
+
+  // ==== TIMER & POLLING ====
+  var TIMER_SECONDS = 4 * 60;
+  var POLL_MS = 15000;
+  var POLL_MAX_MS = 30000;
+  var POLL_STEP_MS = 5000;
+
+  // ==== KODE UNIK ====
+  var UNIQUE_CODE_MIN = 1;
+  var UNIQUE_CODE_MAX = 70;
+
+  var state = {
+    staticCode: "",
+    merchantName: "",
+    selection: { source: null, amount: null },  // amount = nominal dasar (yg dipilih user)
+    finalAmount: null,                          // amount + kode unik
+    uniqueCode: null,
+    trxId: null,
+    qrisUrl: null,
+    createdAt: null
+  };
+
+  var el = {
+    brandName: document.getElementById("brandName"),
+    stepSetup: document.getElementById("stepSetup"),
+    stepAmount: document.getElementById("stepAmount"),
+    stepQr: document.getElementById("stepQr"),
+    stepDone: document.getElementById("stepDone"),
+    merchantName: document.getElementById("merchantName"),
+    staticCode: document.getElementById("staticCode"),
+    setupNote: document.getElementById("setupNote"),
+    btnSaveCode: document.getElementById("btnSaveCode"),
+    lcdAmount: document.getElementById("lcdAmount"),
+    amountGrid: document.getElementById("amountGrid"),
+    customInput: document.getElementById("customInput"),
+    btnGenerate: document.getElementById("btnGenerate"),
+    amountNote: document.getElementById("amountNote"),
+    btnChangeCode: document.getElementById("btnChangeCode"),
+    ticketMerchant: document.getElementById("ticketMerchant"),
+    qrBaseAmount: document.getElementById("qrBaseAmount"),
+    qrUniqueCode: document.getElementById("qrUniqueCode"),
+    qrAmount: document.getElementById("qrAmount"),
+    qrBox: document.getElementById("qrBox"),
+    qrTimer: document.getElementById("qrTimer"),
+    btnCancelQr: document.getElementById("btnCancelQr"),
+    btnPaidQr: document.getElementById("btnPaidQr"),
+    qrNote: document.getElementById("qrNote"),
+    doneAmount: document.getElementById("doneAmount"),
+    btnNewPayment: document.getElementById("btnNewPayment")
+  };
+
+  var timerInterval = null;
+  var pollInterval = null;
+
+  // ================== HELPERS ==================
+  function fmt(n) { return "Rp" + Number(n).toLocaleString("id-ID"); }
+
+  // Kode unik 1-70, hindari 0 biar selalu ada tambahan
+  function generateUniqueCode() {
+    return Math.floor(Math.random() * (UNIQUE_CODE_MAX - UNIQUE_CODE_MIN + 1)) + UNIQUE_CODE_MIN;
+  }
+
+  function showStep(name) {
+    ["stepSetup", "stepAmount", "stepQr", "stepDone"].forEach(function (s) {
+      el[s].classList.toggle("hidden", s !== name);
+    });
+  }
+
+  function setNote(node, msg, type) {
+    node.innerHTML = "";
+    if (!msg) return;
+    var div = document.createElement("div");
+    div.className = "note " + type;
+    div.textContent = msg;
+    node.appendChild(div);
+  }
+
+  function refreshBrand() {
+    var name = state.merchantName || "Bayar dengan QRIS";
+    el.brandName.textContent = name;
+    el.ticketMerchant.textContent = state.merchantName || "Toko";
+  }
+
+  function quickValidateQris(code) {
+    var q = code.replace(/[\r\n\t]/g, "").trim();
+    if (q.length < 20) throw new Error("Kode QRIS terlalu pendek / kosong.");
+    if (q.indexOf("5802ID") === -1) throw new Error("Bukan QRIS Indonesia (tag 5802ID tidak ada).");
+    if (q.indexOf("010211") === -1) throw new Error("Bukan QRIS statis (tag 010211 tidak ada).");
+  }
+
+  function stopAllIntervals() {
+    clearInterval(timerInterval);
+    clearTimeout(pollInterval);
+    clearInterval(pollInterval);
+    timerInterval = null;
+    pollInterval = null;
+  }
+
+  // ================== STEP 1: SETUP ==================
+  function loadSaved() {
+    try {
+      var savedCode = localStorage.getItem(STORAGE_CODE_KEY);
+      var savedName = localStorage.getItem(STORAGE_NAME_KEY);
+      if (savedName) { state.merchantName = savedName; el.merchantName.value = savedName; }
+      refreshBrand();
+      if (savedCode) {
+        state.staticCode = savedCode;
+        el.staticCode.value = savedCode;
+        showStep("stepAmount");
+        return;
+      }
+    } catch (e) {}
+    showStep("stepSetup");
+  }
+
+  el.btnSaveCode.addEventListener("click", function () {
+    var name = el.merchantName.value.trim();
+    var val = el.staticCode.value.trim();
+    if (!val) {
+      setNote(el.setupNote, "Tempel kode QRIS statis kamu dulu.", "invalid");
+      return;
+    }
+    try {
+      quickValidateQris(val);
+    } catch (e) {
+      setNote(el.setupNote, e.message, "invalid");
+      return;
+    }
+    state.staticCode = val.replace(/[\r\n\t]/g, "").trim();
+    state.merchantName = name;
+    try {
+      localStorage.setItem(STORAGE_CODE_KEY, state.staticCode);
+      localStorage.setItem(STORAGE_NAME_KEY, state.merchantName);
+    } catch (e) {}
+    setNote(el.setupNote, "", "");
+    refreshBrand();
+    showStep("stepAmount");
+  });
+
+  el.btnChangeCode.addEventListener("click", function () { showStep("stepSetup"); });
+
+  // ================== STEP 2: AMOUNT ==================
+  function renderAmountGrid() {
+    el.amountGrid.innerHTML = "";
+    QUICK_AMOUNTS.forEach(function (val) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "amount-btn";
+      btn.textContent = fmt(val);
+      if (state.selection.source === "quick" && state.selection.amount === val) {
+        btn.classList.add("selected");
+      }
+      btn.addEventListener("click", function () {
+        state.selection = { source: "quick", amount: val };
+        el.customInput.value = "";
+        renderAmountGrid();
+        updateAmountUi();
+      });
+      el.amountGrid.appendChild(btn);
+    });
+  }
+
+  function updateAmountUi() {
+    var v = state.selection;
+    el.lcdAmount.textContent = "RP " + (v.amount ? Number(v.amount).toLocaleString("id-ID") : "0");
+    el.btnGenerate.disabled = !(v.amount && v.amount > 0);
+    setNote(el.amountNote, "", "");
+  }
+
+  el.customInput.addEventListener("input", function () {
+    var raw = el.customInput.value.replace(/[^0-9]/g, "");
+    el.customInput.value = raw;
+    state.selection = raw === "" ? { source: null, amount: null } : { source: "custom", amount: parseInt(raw, 10) };
+    renderAmountGrid();
+    updateAmountUi();
+  });
+
+  // ================== TIMER ==================
+  function startTimer() {
+    var remaining = TIMER_SECONDS;
+    clearInterval(timerInterval);
+    function tick() {
+      var m = Math.floor(remaining / 60), s = remaining % 60;
+      var mm = m < 10 ? "0" + m : String(m), ss = s < 10 ? "0" + s : String(s);
+      if (remaining <= 0) {
+        el.qrTimer.textContent = "Kedaluwarsa";
+        clearInterval(timerInterval);
+        stopAllIntervals();
+        setNote(el.qrNote, "QR kedaluwarsa. Silakan buat ulang.", "invalid");
+        return;
+      }
+      el.qrTimer.textContent = mm + ":" + ss;
+      remaining--;
+    }
+    tick();
+    timerInterval = setInterval(tick, 1000);
+  }
+
+  // ================== CEK PEMBAYARAN ==================
+  function checkPaymentNow() {
+    if (!state.createdAt || !state.finalAmount) return Promise.resolve(null);
+    return fetch(API_BASE + "/check-payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": API_KEY
+      },
+      body: JSON.stringify({
+        amount: state.finalAmount,   // ← pakai finalAmount (nominal + kode unik)
+        startTime: state.createdAt
+      })
+    })
+      .then(function (r) { return r.json(); })
+      .catch(function (e) {
+        console.warn("Check error:", e);
+        return null;
+      });
+  }
+
+  function startPolling() {
+    clearTimeout(pollInterval);
+    clearInterval(pollInterval);
+
+    var currentInterval = POLL_MS;
+
+    function scheduleNext() {
+      pollInterval = setTimeout(async function () {
+        if (!state.createdAt) return;
+
+        var d = await checkPaymentNow();
+
+        if (d && d.paid) {
+          stopAllIntervals();
+          var issuer = (d.transaction && d.transaction.issuer) || "e-wallet";
+          el.doneAmount.textContent =
+            fmt(state.finalAmount) + " sudah dibayar via " + issuer + ".";
+          showStep("stepDone");
+          return;
+        }
+
+        currentInterval = Math.min(currentInterval + POLL_STEP_MS, POLL_MAX_MS);
+        scheduleNext();
+      }, currentInterval);
+    }
+
+    scheduleNext();
+  }
+
+  // ================== STEP 3: GENERATE QR ==================
+  el.btnGenerate.addEventListener("click", async function () {
+    var baseAmount = state.selection.amount;
+    if (!baseAmount) return;
+
+    // Generate kode unik & final amount
+    var uniqueCode = generateUniqueCode();
+    var finalAmount = baseAmount + uniqueCode;
+
+    state.uniqueCode = uniqueCode;
+    state.finalAmount = finalAmount;
+
+    el.btnGenerate.disabled = true;
+    el.btnGenerate.textContent = "Menghubungi server...";
+
+    try {
+      var resp = await fetch(API_BASE + "/create-qris", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY
+        },
+        body: JSON.stringify({ amount: finalAmount })
+      });
+
+      var data = await resp.json();
+      if (!resp.ok || !data.success) {
+        throw new Error((data && data.message) || "Gagal membuat QRIS");
+      }
+
+      var d = data.data || {};
+      state.trxId = d.id || null;
+      state.qrisUrl = d.qris_url || null;
+      state.createdAt = Math.floor(Date.now() / 1000);
+
+      // Tampilkan di tiket
+      el.qrBaseAmount.textContent = fmt(baseAmount);
+      el.qrUniqueCode.textContent = "+" + uniqueCode;
+      el.qrAmount.textContent = fmt(finalAmount);
+
+      if (state.qrisUrl) {
+        el.qrBox.innerHTML =
+          '<img src="' + state.qrisUrl + '" alt="QRIS" ' +
+          'style="max-width:100%;max-height:280px;display:block;image-rendering:pixelated;">';
+      } else {
+        el.qrBox.innerHTML =
+          '<div style="color:#A2332A;font-size:12px;padding:20px;text-align:center">' +
+          'Gateway tidak mengirim qris_url.</div>';
+      }
+
+      setNote(el.qrNote, "Menunggu pembayaran... Status dicek otomatis.", "info");
+      startTimer();
+      startPolling();
+      showStep("stepQr");
+    } catch (err) {
+      setNote(el.amountNote, "Gagal: " + err.message, "invalid");
+    } finally {
+      el.btnGenerate.disabled = false;
+      el.btnGenerate.textContent = "Cetak kode QRIS";
+    }
+  });
+
+  // ================== CANCEL / CEK PEMBAYARAN ==================
+  el.btnCancelQr.addEventListener("click", function () {
+    stopAllIntervals();
+    state.trxId = null;
+    state.qrisUrl = null;
+    state.createdAt = null;
+    state.finalAmount = null;
+    state.uniqueCode = null;
+    showStep("stepAmount");
+  });
+
+  el.btnPaidQr.addEventListener("click", async function () {
+    if (!state.createdAt || !state.finalAmount) {
+      setNote(el.qrNote, "Data transaksi tidak lengkap.", "invalid");
+      return;
+    }
+
+    el.btnPaidQr.disabled = true;
+    el.btnPaidQr.textContent = "Mengecek...";
+
+    try {
+      var d = await checkPaymentNow();
+
+      if (d && d.paid) {
+        stopAllIntervals();
+        var issuer = (d.transaction && d.transaction.issuer) || "e-wallet";
+        el.doneAmount.textContent =
+          fmt(state.finalAmount) + " sudah dibayar via " + issuer + ".";
+        showStep("stepDone");
+      } else {
+        setNote(
+          el.qrNote,
+          "Pembayaran belum terdeteksi di mutasi ShopeePay. Pastikan pembeli bayar sesuai total (termasuk kode unik).",
+          "invalid"
+        );
+      }
+    } catch (err) {
+      setNote(el.qrNote, "Gagal cek ke gateway: " + err.message, "invalid");
+    } finally {
+      el.btnPaidQr.disabled = false;
+      el.btnPaidQr.textContent = "Cek Pembayaran";
+    }
+  });
+
+  // ================== STEP 4 ==================
+  el.btnNewPayment.addEventListener("click", function () {
+    stopAllIntervals();
+    state.trxId = null;
+    state.qrisUrl = null;
+    state.createdAt = null;
+    state.finalAmount = null;
+    state.uniqueCode = null;
+    state.selection = { source: null, amount: null };
+    el.customInput.value = "";
+    renderAmountGrid();
+    updateAmountUi();
+    showStep("stepAmount");
+  });
+
+  // ================== PAUSE SAAT TAB GAK AKTIF ==================
+  document.addEventListener("visibilitychange", function () {
+    var onQrStep = el.stepQr && !el.stepQr.classList.contains("hidden");
+    if (document.hidden) {
+      clearTimeout(pollInterval);
+      clearInterval(pollInterval);
+      console.log("Polling dijeda (tab gak aktif)");
+    } else if (state.createdAt && onQrStep) {
+      startPolling();
+      console.log("Polling dilanjutkan");
+    }
+  });
+
+  // ================== INIT ==================
+  renderAmountGrid();
+  updateAmountUi();
+  loadSaved();
+})();
+</script>
+</body>
+</html>
