@@ -590,23 +590,5 @@ app.get("/api/logs", apiKeyMiddleware, (_0xce5bc4, _0x4da4a9) => {
     }
   });
 });
-app.listen(PORT, () => {
-  console.log("ShopeePay API (express) running at http://localhost:" + PORT);
-  console.log('Endpoints:');
-  console.log("  POST /update-token       - Update ShopeeToken");
-  console.log("  GET  /token-status       - Check ShopeeToken Validity status");
-  console.log("  POST /create-qris        - Generate Dynamic QRIS from static template");
-  console.log("  GET  /qr/:id             - Fetch Dynamic QRIS Image Redirect");
-  console.log("  GET  /transactions       - Fetch transactions list");
-  console.log("  GET  /transactions/all   - Fetch all transactions of the month");
-  if (shopeeToken && apiKey) {
-    startTokenChecker();
-  } else {
-    console.warn("WARNING: SHOPEE_TOKEN and API_KEY must be set in .env to run checks.");
-  }
-});
 const path = require("path");
 app.use(express.static(path.join(__dirname, "public")));
-app.get('/', (req, res) => {
-  res.send('Shoppe API Running');
-});
